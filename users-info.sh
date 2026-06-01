@@ -2,9 +2,44 @@
 
 DOMAIN_MAP="/etc/userdomains"
 DNS_SERVER="8.8.8.8"
+TARGET_USER=""
+
+usage() {
+  echo "Usage:"
+  echo "  $0"
+  echo "  $0 -user=USERNAME"
+  echo "  $0 --user=USERNAME"
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    -user=*|--user=*)
+      TARGET_USER="${arg#*=}"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $arg"
+      usage
+      exit 1
+      ;;
+  esac
+done
 
 if [[ $EUID -ne 0 ]]; then
   echo "Run as root"
+  exit 1
+fi
+
+if [[ ! -f "$DOMAIN_MAP" ]]; then
+  echo "$DOMAIN_MAP not found"
+  exit 1
+fi
+
+if [[ -n "$TARGET_USER" && ! -f "/var/cpanel/users/$TARGET_USER" ]]; then
+  echo "cPanel user not found: $TARGET_USER"
   exit 1
 fi
 
@@ -19,6 +54,7 @@ done
 
 join_lines() {
   local data="$1"
+
   if [[ -z "$data" ]]; then
     echo "-"
   else
@@ -160,8 +196,17 @@ while IFS=: read -r domain user; do
   [[ "$domain" == "*" ]] && continue
   [[ "$user" == "nobody" ]] && continue
 
+  if [[ -n "$TARGET_USER" && "$user" != "$TARGET_USER" ]]; then
+    continue
+  fi
+
   user_domains["$user"]+="$domain "
 done < "$DOMAIN_MAP"
+
+if [[ -n "$TARGET_USER" && -z "${user_domains[$TARGET_USER]}" ]]; then
+  echo "No domains found for user: $TARGET_USER"
+  exit 1
+fi
 
 for user in $(printf "%s\n" "${!user_domains[@]}" | sort); do
   unique_domains=$(printf "%s\n" ${user_domains[$user]} | sort -u)
