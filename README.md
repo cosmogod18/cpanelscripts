@@ -1,7 +1,5 @@
 # Usage
 
----
-
 ## users-info.sh
 
 ### 1. With curl
@@ -15,5 +13,4 @@
 #### For one user:
 ```./user-info.sh -user=USERNAME```
 
----
 
