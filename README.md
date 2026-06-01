@@ -1,6 +1,4 @@
-# Usage
-
-### users-info.sh
+### Usage users-info.sh
 
 #### 1. With curl
 ##### For all users:
