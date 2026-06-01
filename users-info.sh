@@ -8,7 +8,6 @@ usage() {
   echo "Usage:"
   echo "  $0"
   echo "  $0 -user=USERNAME"
-  echo "  $0 --user=USERNAME"
 }
 
 for arg in "$@"; do
